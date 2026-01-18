@@ -373,7 +373,7 @@ def login_page():
             <h1 style="margin:0; font-size:2.5rem; color:{colors['boton']} !important;">F.I.T.A. ACCESS</h1>
             <p style="color:#7F8C8D !important; font-size:1.2rem;">Plataforma Nacional de Ingeniería y Construcción</p>
             <hr style="margin:20px 0;">
-            <p style="font-size:0.9rem;">Acceso Seguro v6.0</p>
+            <p style="font-size:0.9rem;">Acceso Seguro v8.0</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -732,68 +732,82 @@ def main_app():
 
 
     # --------------------------------------------------------------------------
-    # MÓDULO 5: PANEL DE ADMINISTRADOR (CONTROL TOTAL)
+    # MÓDULO 5: PANEL DE ADMINISTRADOR (BLINDADO CON CONTRASEÑA)
     # --------------------------------------------------------------------------
     elif menu == "🔧 Panel Admin (Privado)":
         st.title("🔧 Panel de Control - Administrador")
-        st.markdown("""
-        <div style="background:#FDEDEC; padding:15px; border-radius:10px; border-left:5px solid #E74C3C;">
-            <b>Zona de Alto Privilegio:</b> Desde aquí puedes gestionar la economía del sistema y moderar contenido.
-        </div>
-        """, unsafe_allow_html=True)
-        st.write("")
+        st.write("Zona restringida para mantenimiento y economía del sistema.")
+        st.markdown("---")
         
-        tab_eco, tab_files, tab_users = st.tabs(["🖨️ Economía (Minting)", "🗑️ Moderación Archivos", "👥 Gestión Usuarios"])
+        # === 🔒 BLOQUEO DE SEGURIDAD ===
+        password = st.text_input("🔐 Ingrese Clave de Acceso Root:", type="password")
         
-        # TAB 1: ECONOMÍA (GENERAR PUNTOS INFINITOS)
-        with tab_eco:
-            st.subheader("Banco Central F.I.T.A.")
-            st.write("Generación de puntos para pruebas o bonificaciones administrativas.")
+        if password == "moises":  # <--- TU CONTRASEÑA
+            st.success("✅ Acceso Concedido: Bienvenido, Moises.")
             
-            c1, c2 = st.columns(2)
-            with c1:
-                monto_mint = st.number_input("Cantidad a imprimir", min_value=100, max_value=100000, value=1000, step=100)
-            with c2:
-                motivo_mint = st.text_input("Motivo de la emisión", value="Ajuste Administrativo")
+            st.markdown("""
+            <div style="background:#FDEDEC; padding:15px; border-radius:10px; border-left:5px solid #E74C3C;">
+                <b>Zona de Alto Privilegio:</b> Desde aquí puedes gestionar la economía del sistema y moderar contenido.
+            </div>
+            """, unsafe_allow_html=True)
+            st.write("")
             
-            if st.button("🖨️ Generar Puntos", type="primary"):
-                st.session_state['puntos'] += monto_mint
-                registrar_transaccion("ADMIN MINT", monto_mint, motivo_mint)
-                st.success(f"Se han añadido {monto_mint} puntos a tu cuenta de administrador.")
-                time.sleep(1)
-                st.rerun()
+            tab_eco, tab_files, tab_users = st.tabs(["🖨️ Economía (Minting)", "🗑️ Moderación Archivos", "👥 Gestión Usuarios"])
+            
+            # TAB 1: ECONOMÍA (GENERAR PUNTOS INFINITOS)
+            with tab_eco:
+                st.subheader("Banco Central F.I.T.A.")
+                st.write("Generación de puntos para pruebas o bonificaciones administrativas.")
+                
+                c1, c2 = st.columns(2)
+                with c1:
+                    monto_mint = st.number_input("Cantidad a imprimir", min_value=100, max_value=100000, value=1000, step=100)
+                with c2:
+                    motivo_mint = st.text_input("Motivo de la emisión", value="Ajuste Administrativo")
+                
+                if st.button("🖨️ Generar Puntos", type="primary"):
+                    st.session_state['puntos'] += monto_mint
+                    registrar_transaccion("ADMIN MINT", monto_mint, motivo_mint)
+                    st.success(f"Se han añadido {monto_mint} puntos a tu cuenta de administrador.")
+                    time.sleep(1)
+                    st.rerun()
 
-        # TAB 2: MODERACIÓN (BORRAR CUALQUIER ARCHIVO)
-        with tab_files:
-            st.subheader("Gestión de Contenido")
-            st.write("Lista completa de archivos en el servidor. Puedes eliminar cualquiera.")
-            
-            if st.session_state['repositorio']:
-                for idx, file in enumerate(st.session_state['repositorio']):
-                    with st.container():
-                        c_det, c_del = st.columns([4, 1])
-                        with c_det:
-                            st.write(f"📄 **{file['nombre']}** | Subido por: {file['autor']} | {file['fecha']}")
-                        with c_del:
-                            if st.button("❌ Eliminar", key=f"admin_del_{idx}"):
-                                st.session_state['repositorio'].pop(idx)
-                                st.toast(f"Archivo {file['nombre']} eliminado por Administrador.", icon="🚫")
-                                time.sleep(1)
-                                st.rerun()
-                        st.divider()
-            else:
-                st.info("El repositorio está vacío.")
+            # TAB 2: MODERACIÓN (BORRAR CUALQUIER ARCHIVO)
+            with tab_files:
+                st.subheader("Gestión de Contenido")
+                st.write("Lista completa de archivos en el servidor. Puedes eliminar cualquiera.")
+                
+                if st.session_state['repositorio']:
+                    for idx, file in enumerate(st.session_state['repositorio']):
+                        with st.container():
+                            c_det, c_del = st.columns([4, 1])
+                            with c_det:
+                                st.write(f"📄 **{file['nombre']}** | Subido por: {file['autor']} | {file['fecha']}")
+                            with c_del:
+                                if st.button("❌ Eliminar", key=f"admin_del_{idx}"):
+                                    st.session_state['repositorio'].pop(idx)
+                                    st.toast(f"Archivo {file['nombre']} eliminado por Administrador.", icon="🚫")
+                                    time.sleep(1)
+                                    st.rerun()
+                            st.divider()
+                else:
+                    st.info("El repositorio está vacío.")
 
-        # TAB 3: USUARIOS
-        with tab_users:
-            st.subheader("Directorio de Usuarios")
-            st.write("Añadir nuevos usuarios a la lista de contactos global.")
-            
-            nuevo_user = st.text_input("Nombre del nuevo usuario")
-            if st.button("Añadir Usuario"):
-                if nuevo_user:
-                    st.session_state['amigos'].append(nuevo_user)
-                    st.success(f"Usuario {nuevo_user} añadido a la base de datos.")
+            # TAB 3: USUARIOS
+            with tab_users:
+                st.subheader("Directorio de Usuarios")
+                st.write("Añadir nuevos usuarios a la lista de contactos global.")
+                
+                nuevo_user = st.text_input("Nombre del nuevo usuario")
+                if st.button("Añadir Usuario"):
+                    if nuevo_user:
+                        st.session_state['amigos'].append(nuevo_user)
+                        st.success(f"Usuario {nuevo_user} añadido a la base de datos.")
+                        
+        else:
+            if password: # Si escribieron algo y no es "moises"
+                st.error("⛔ ACCESO DENEGADO: Contraseña incorrecta.")
+                st.warning("Este incidente ha sido reportado.")
 
 
 # ==============================================================================
