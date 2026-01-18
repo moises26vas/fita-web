@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. GESTIÓN DE MEMORIA Y ESTADO (DATABASE SIMULADA) ---
+# --- 2. GESTIÓN DE MEMORIA Y ESTADO ---
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 if 'setup_completo' not in st.session_state:
@@ -29,9 +29,12 @@ if 'repositorio' not in st.session_state:
         {"nombre": "Norma E.030 Diseño Sismorresistente.pdf", "carrera": "Ingeniería Civil", "area": "Estructuras", "autor": "Admin Sistema", "rol_autor": "Docente", "fecha": "2026-01-15", "desc": "Norma actualizada del RNE."},
         {"nombre": "Plantilla Metrados Acero.xlsx", "carrera": "Ingeniería Civil", "area": "Construcción", "autor": "Luigi", "rol_autor": "Estudiante", "fecha": "2026-01-16", "desc": "Excel automatizado para vigas."}
     ]
+# Lista simulada de amigos para transferirles puntos
+if 'amigos' not in st.session_state:
+    st.session_state['amigos'] = ["Carlos (Civil)", "Maria (Arqui)", "Jorge (Minas)", "Ana (Topografía)"]
 
 # --- 3. LISTAS DE DATOS PERÚ ---
-UNIVERSIDADES = ["UPN - Universidad Privada del Norte", "UNI - Universidad Nacional de Ingeniería", "PUCP - Católica", "UPC", "UTP", "UNMSM", "UCV", "URP", "SENCICO", "Otra"]
+UNIVERSIDADES = ["UPN", "UNI", "PUCP", "UPC", "UTP", "UNMSM", "UCV", "URP", "SENCICO", "Otra"]
 CARRERAS = {
     "Ingeniería Civil": ["Estructuras", "Geotecnia", "Hidráulica", "Vías y Transportes", "Gestión de Proyectos (BIM)"],
     "Arquitectura": ["Diseño Arquitectónico", "Urbanismo", "Interiores", "Paisajismo"],
@@ -39,82 +42,75 @@ CARRERAS = {
     "Topografía": ["Levantamientos", "Fotogrametría", "Sistemas GIS"]
 }
 
-# --- 4. ESTILOS CSS (CORRECCIÓN DE MENÚS DESPLEGABLES) ---
+# --- 4. ESTILOS CSS (SOLUCIÓN DEFINITIVA DE VISIBILIDAD) ---
 st.markdown("""
 <style>
-    /* 1. FONDO GENERAL */
+    /* 1. FORZAR TEMA CLARO EN TODO EL APP (Fondo y Texto) */
     [data-testid="stAppViewContainer"] {
-        background-color: #F4F6F7;
-    }
-
-    /* 2. TEXTO NEGRO GENERAL */
-    h1, h2, h3, h4, h5, h6, p, span, label, div {
-        color: #17202A;
-    }
-
-    /* 3. --- ARREGLO CRÍTICO DE MENÚS (DROPDOWNS) --- */
-    /* Forzar fondo BLANCO y texto NEGRO en la caja de selección */
-    div[data-baseweb="select"] > div {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        border: 1px solid #BDC3C7;
-    }
-    
-    /* Forzar fondo BLANCO en la lista desplegable (el menú que se abre) */
-    div[data-baseweb="popover"] {
-        background-color: #FFFFFF !important;
-        border: 1px solid #BDC3C7;
-    }
-    
-    /* Forzar fondo BLANCO en cada opción de la lista */
-    ul[data-baseweb="menu"] {
-        background-color: #FFFFFF !important;
-    }
-    
-    /* Forzar color NEGRO en el texto de las opciones */
-    li[data-baseweb="option"] {
+        background-color: #F0F2F5 !important; /* Gris muy claro profesional */
         color: #000000 !important;
     }
-    
-    /* Color azulito cuando pasas el mouse por encima de una opción */
-    li[data-baseweb="option"]:hover, li[aria-selected="true"] {
-        background-color: #D6EAF8 !important;
-        color: #000000 !important;
-    }
-    
-    /* Color del texto seleccionado dentro de la caja */
-    div[data-testid="stMarkdownContainer"] p {
-        color: #17202A !important;
+    [data-testid="stSidebar"] {
+        background-color: #FFFFFF !important;
+        border-right: 1px solid #ddd;
     }
 
-    /* 4. TARJETAS */
+    /* 2. FORZAR TEXTO NEGRO UNIVERSALMENTE */
+    /* Esto arregla el problema de "letras oscuras invisibles" */
+    h1, h2, h3, h4, h5, h6, p, div, span, label, li, td, th {
+        color: #1C2833 !important; /* Negro azulado elegante */
+    }
+
+    /* 3. ARREGLO DE MENÚS DESPLEGABLES (Selectbox) */
+    div[data-baseweb="select"] > div, div[data-baseweb="popover"] {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: 1px solid #ccc;
+    }
+    div[role="option"] {
+        color: #000000 !important;
+        background-color: #FFFFFF !important;
+    }
+    div[role="option"]:hover {
+        background-color: #D4E6F1 !important; /* Azul claro al pasar mouse */
+    }
+
+    /* 4. TARJETAS PERSONALIZADAS */
     .login-card {
-        background-color: white; padding: 40px; border-radius: 15px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; border-top: 5px solid #E74C3C;
+        background-color: #FFFFFF !important; padding: 40px; border-radius: 15px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; border-top: 5px solid #C0392B;
     }
     .file-card {
-        background-color: white; padding: 20px; border-radius: 10px;
+        background-color: #FFFFFF !important; padding: 20px; border-radius: 10px;
         border-left: 5px solid #2980B9; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
+    
+    /* BILLETERA (TEXTO BLANCO SOLO AQUÍ) */
     .wallet-box {
         background: linear-gradient(135deg, #154360 0%, #1A5276 100%);
         padding: 25px; border-radius: 12px; text-align: center;
         margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
-    /* Excepción para texto blanco SOLO en billetera y botones */
-    .wallet-box h2, .wallet-box div { color: #FFFFFF !important; }
-    .stButton > button { color: #FFFFFF !important; background-color: #212F3D; border: none; }
-    
-    /* Badges */
-    .badge { padding: 5px 12px; border-radius: 15px; font-weight: bold; font-size: 0.85rem; }
-    .estudiante { background-color: #D4E6F1; color: #154360 !important; }
-    .docente { background-color: #FCF3CF; color: #7D6608 !important; }
+    .wallet-box h2, .wallet-box div, .wallet-box span {
+        color: #FFFFFF !important; /* Excepción: Blanco en billetera */
+    }
 
+    /* BADGES */
+    .badge { padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8rem; }
+    .estudiante { background-color: #D6EAF8 !important; color: #154360 !important; }
+    .docente { background-color: #FCF3CF !important; color: #7D6608 !important; }
+
+    /* BOTONES */
+    .stButton > button {
+        background-color: #2C3E50 !important;
+        color: #FFFFFF !important;
+        border: none;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # =======================================================
-# LÓGICA DE NEGOCIO
+# FUNCIONES AUXILIARES
 # =======================================================
 def registrar_transaccion(tipo, monto, descripcion):
     st.session_state['transacciones'].append({
@@ -138,9 +134,9 @@ def login_page():
         </div>
         """, unsafe_allow_html=True)
         st.write("")
-        if st.button("🔐 Iniciar Sesión Segura (Google Auth)", type="primary", use_container_width=True):
-            with st.spinner("Validando credenciales..."):
-                time.sleep(1.5)
+        if st.button("🔐 Iniciar Sesión con Google", type="primary", use_container_width=True):
+            with st.spinner("Conectando..."):
+                time.sleep(1)
                 st.session_state['logged_in'] = True
                 st.session_state['usuario'] = {
                     'nombre': "Ing. Luigi", 'email': "luigi.ing@upn.pe",
@@ -152,31 +148,25 @@ def login_page():
 # PANTALLA 2: ONBOARDING
 # =======================================================
 def onboarding_page():
-    st.markdown("<h1 style='text-align:center;'>🛠️ Configuración de Perfil Académico</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center;'>Personalización de contenido.</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center;'>🛠️ Perfil Académico</h1>", unsafe_allow_html=True)
     st.write("---")
 
     with st.container():
-        rol = st.radio("Selecciona tu Jerarquía:", ["Estudiante Universitario/Técnico", "Docente / Profesional"], horizontal=True)
-        
+        rol = st.radio("Jerarquía:", ["Estudiante", "Docente / Profesional"], horizontal=True)
         c1, c2 = st.columns(2)
         with c1:
-            # Estos son los menús que ahora saldrán con fondo blanco
-            uni = st.selectbox("Institución Educativa", UNIVERSIDADES)
-            carrera = st.selectbox("Carrera Profesional", list(CARRERAS.keys()))
+            uni = st.selectbox("Universidad", UNIVERSIDADES)
+            carrera = st.selectbox("Carrera", list(CARRERAS.keys()))
         with c2:
-            area = st.selectbox("Especialidad / Interés", CARRERAS[carrera])
+            area = st.selectbox("Especialidad", CARRERAS[carrera])
             if "Estudiante" in rol:
-                nivel = st.slider("Ciclo Académico", 1, 10, 5)
-                nivel_txt = f"Ciclo {nivel}"
+                nivel_txt = f"Ciclo {st.slider('Ciclo', 1, 10, 5)}"
                 rol_corto = "Estudiante"
             else:
-                nivel_txt = st.selectbox("Grado Académico", ["Bachiller", "Titulado", "Magíster", "Doctor"])
+                nivel_txt = st.selectbox("Grado", ["Bachiller", "Titulado", "Magíster", "Doctor"])
                 rol_corto = "Docente"
 
-        st.info("ℹ️ Al registrarte, se creará automáticamente tu Billetera Digital con 1000 Puntos.")
-        
-        if st.button("💾 Guardar e Ingresar", use_container_width=True):
+        if st.button("💾 Guardar y Entrar", use_container_width=True):
             st.session_state['usuario'].update({
                 'rol': rol_corto, 'universidad': uni, 'carrera': carrera,
                 'especialidad': area, 'nivel': nivel_txt
@@ -194,10 +184,8 @@ def main_app():
         st.image(st.session_state['usuario']['foto'], width=80)
         st.write(f"**{st.session_state['usuario']['nombre']}**")
         
-        if st.session_state['usuario']['rol'] == "Estudiante":
-            st.markdown('<span class="badge estudiante">🎓 Estudiante</span>', unsafe_allow_html=True)
-        else:
-            st.markdown('<span class="badge docente">👨‍🏫 Docente</span>', unsafe_allow_html=True)
+        badge_class = "estudiante" if st.session_state['usuario']['rol'] == "Estudiante" else "docente"
+        st.markdown(f'<span class="badge {badge_class}">{st.session_state["usuario"]["rol"]}</span>', unsafe_allow_html=True)
             
         st.caption(st.session_state['usuario']['universidad'])
         st.markdown("---")
@@ -210,7 +198,7 @@ def main_app():
         </div>
         """, unsafe_allow_html=True)
         
-        menu = st.radio("Navegación", ["🏠 Inicio", "📂 Repositorio Global", "📤 Subir Material", "👤 Mi Perfil & Wallet"])
+        menu = st.radio("Navegación", ["🏠 Inicio", "📂 Repositorio", "📤 Subir (+10)", "👤 Billetera & Transferencias", "🔧 Admin Panel"])
         
         st.markdown("---")
         if st.button("Cerrar Sesión"):
@@ -222,96 +210,136 @@ def main_app():
     if menu == "🏠 Inicio":
         st.title("🏠 Panel de Control")
         col1, col2, col3 = st.columns(3)
-        col1.metric("Archivos", len(st.session_state['repositorio']))
-        col2.metric("Tu Saldo", f"{st.session_state['puntos']} pts")
-        col3.metric("Nivel", "Premium")
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            st.info("📂 **Buscar Archivos:** Encuentra planos y normas.")
-        with c2:
-            st.success("📤 **Subir Archivos:** Gana +10 puntos por aporte.")
+        col1.metric("Biblioteca", f"{len(st.session_state['repositorio'])} Docs")
+        col2.metric("Saldo", f"{st.session_state['puntos']} pts")
+        col3.metric("Estado", "Activo")
+        st.info("👋 Hola Luigi. Tienes acceso total al sistema.")
 
     # --- REPOSITORIO ---
-    elif menu == "📂 Repositorio Global":
+    elif menu == "📂 Repositorio":
         st.title("📂 Biblioteca Técnica")
-        st.markdown("Costo por descarga: **20 pts**.")
+        st.write("Descarga: **-20 pts**")
         
-        with st.expander("🔍 Filtros de Búsqueda", expanded=True):
-            colf1, colf2 = st.columns(2)
-            f_carrera = colf1.selectbox("Carrera", ["Todas"] + list(CARRERAS.keys()))
-            opciones_area = ["Todas"] + CARRERAS[f_carrera] if f_carrera != "Todas" else ["Todas"]
-            f_area = colf2.selectbox("Especialidad", opciones_area)
+        # Filtros
+        c1, c2 = st.columns(2)
+        f_carrera = c1.selectbox("Filtrar Carrera", ["Todas"] + list(CARRERAS.keys()))
+        opciones_area = ["Todas"] + CARRERAS[f_carrera] if f_carrera != "Todas" else ["Todas"]
+        f_area = c2.selectbox("Filtrar Área", opciones_area)
 
         archivos = st.session_state['repositorio']
         if f_carrera != "Todas": archivos = [a for a in archivos if a['carrera'] == f_carrera]
         if f_area != "Todas": archivos = [a for a in archivos if a['area'] == f_area]
 
-        if not archivos: st.warning("No se encontraron archivos.")
-        
         for idx, file in enumerate(archivos):
             with st.container():
-                col_info, col_btn = st.columns([4, 1])
-                with col_info:
+                c_info, c_btn = st.columns([4, 1])
+                with c_info:
                     st.markdown(f"""
                     <div class="file-card">
                         <h4 style="margin:0;">📄 {file['nombre']}</h4>
                         <p style="margin:5px 0;">{file['desc']}</p>
-                        <small>{file['carrera']} | {file['area']} | Autor: <b>{file['autor']}</b></small>
+                        <small>{file['carrera']} | Autor: {file['autor']}</small>
                     </div>
                     """, unsafe_allow_html=True)
-                with col_btn:
+                with c_btn:
                     st.write("")
                     if st.button(f"⬇️ Bajar", key=f"dl_{idx}"):
                         if st.session_state['puntos'] >= 20:
                             st.session_state['puntos'] -= 20
                             registrar_transaccion("Gasto", 20, f"Descarga: {file['nombre']}")
-                            st.toast("✅ Descarga iniciada (-20 pts)", icon="📉")
+                            st.toast("✅ Descarga OK (-20 pts)", icon="📉")
                         else:
-                            st.error("❌ Saldo insuficiente")
+                            st.error("Saldo insuficiente")
 
     # --- SUBIR ---
-    elif menu == "📤 Subir Material":
-        st.title("📤 Aportar a la Comunidad")
-        with st.form("upload_form"):
-            st.write("Gana **10 Puntos** por aporte.")
-            uploaded = st.file_uploader("Archivo")
-            c1, c2 = st.columns(2)
-            u_carrera = c1.selectbox("Carrera", list(CARRERAS.keys()))
-            u_area = c2.selectbox("Área", CARRERAS[u_carrera])
+    elif menu == "📤 Subir (+10)":
+        st.title("📤 Subir Archivo")
+        st.write("Gana **10 Puntos** por compartir.")
+        with st.form("up_form"):
+            up = st.file_uploader("Archivo")
             desc = st.text_input("Descripción")
+            c1, c2 = st.columns(2)
+            u_car = c1.selectbox("Carrera", list(CARRERAS.keys()))
+            u_are = c2.selectbox("Área", CARRERAS[u_car])
             
-            if st.form_submit_button("🚀 Publicar Aporte"):
-                if uploaded and desc:
+            if st.form_submit_button("🚀 Publicar"):
+                if up and desc:
                     st.session_state['puntos'] += 10
-                    registrar_transaccion("Ingreso", 10, f"Aporte: {uploaded.name}")
+                    registrar_transaccion("Ingreso", 10, f"Aporte: {up.name}")
                     st.session_state['repositorio'].append({
-                        "nombre": uploaded.name, "carrera": u_carrera, "area": u_area,
+                        "nombre": up.name, "carrera": u_car, "area": u_are,
                         "autor": st.session_state['usuario']['nombre'],
                         "rol_autor": st.session_state['usuario']['rol'],
                         "fecha": datetime.now().strftime("%Y-%m-%d"), "desc": desc
                     })
                     st.success("¡Subido! (+10 pts)")
-                    time.sleep(1.5)
+                    time.sleep(1)
                     st.rerun()
 
-    # --- PERFIL ---
-    elif menu == "👤 Mi Perfil & Wallet":
-        st.title("👤 Mi Perfil")
-        c1, c2 = st.columns([1, 2])
-        with c1: st.image(st.session_state['usuario']['foto'], width=150)
-        with c2:
-            st.markdown(f"## {st.session_state['usuario']['nombre']}")
-            st.info(f"🎓 **{st.session_state['usuario']['rol']}** - {st.session_state['usuario']['nivel']}")
-            st.write(f"🏛️ {st.session_state['usuario']['universidad']}")
-            st.write(f"🏗️ {st.session_state['usuario']['carrera']}")
+    # --- BILLETERA & TRANSFERENCIAS ---
+    elif menu == "👤 Billetera & Transferencias":
+        st.title("💰 Gestión Financiera F.I.T.A.")
+        
+        col_wallet, col_transfer = st.columns(2)
+        
+        with col_wallet:
+            st.subheader("💳 Mi Saldo")
+            st.info(f"Tienes **{st.session_state['puntos']} FitaCoins** disponibles para usar.")
+            
+            st.write("### 📜 Historial")
+            df = pd.DataFrame(st.session_state['transacciones']).iloc[::-1]
+            st.dataframe(df, use_container_width=True, hide_index=True)
 
-        st.markdown("### 💰 Historial de Billetera")
-        if st.session_state['transacciones']:
-            df_trans = pd.DataFrame(st.session_state['transacciones']).iloc[::-1]
-            st.dataframe(df_trans, use_container_width=True, hide_index=True)
-        else:
-            st.write("No hay movimientos.")
+        with col_transfer:
+            st.subheader("💸 Transferir a Amigos")
+            st.markdown("""
+            <div style="background:white; padding:20px; border-radius:10px; border:1px solid #ddd;">
+                <h4 style="margin:0;">Enviar Puntos</h4>
+                <p>Ayuda a un colega a descargar planos.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            st.write("")
+            
+            # FORMULARIO DE TRANSFERENCIA
+            destinatario = st.selectbox("Seleccionar Destinatario", st.session_state['amigos'])
+            monto_envio = st.number_input("Monto a enviar", min_value=1, max_value=st.session_state['puntos'], step=10)
+            
+            if st.button("➡️ Realizar Transferencia", type="primary"):
+                if st.session_state['puntos'] >= monto_envio:
+                    st.session_state['puntos'] -= monto_envio
+                    registrar_transaccion("Egreso", monto_envio, f"Transferencia a {destinatario}")
+                    st.balloons()
+                    st.success(f"¡Has enviado {monto_envio} pts a {destinatario}!")
+                    time.sleep(2)
+                    st.rerun()
+                else:
+                    st.error("No tienes saldo suficiente.")
+
+    # --- PANEL ADMIN (NUEVO) ---
+    elif menu == "🔧 Admin Panel":
+        st.title("🔧 Panel de Control (Admin)")
+        st.warning("Zona restringida para administradores del sistema.")
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("### 🖨️ Emisión Monetaria")
+            st.write("Generar puntos para el sistema (Testing).")
+            monto_mint = st.number_input("Cantidad a generar", 100, 10000, 1000)
+            if st.button("Generar Puntos"):
+                st.session_state['puntos'] += monto_mint
+                registrar_transaccion("ADMIN", monto_mint, "Generación manual de puntos")
+                st.success(f"Se generaron {monto_mint} puntos.")
+                time.sleep(1)
+                st.rerun()
+        
+        with c2:
+            st.markdown("### 👥 Gestión de Usuarios")
+            st.write("Agregar nuevo amigo a la lista de contactos.")
+            nuevo_amigo = st.text_input("Nombre del nuevo usuario")
+            if st.button("Agregar Usuario"):
+                if nuevo_amigo:
+                    st.session_state['amigos'].append(nuevo_amigo)
+                    st.success(f"{nuevo_amigo} añadido a la red.")
 
 # =======================================================
 # EJECUCIÓN
