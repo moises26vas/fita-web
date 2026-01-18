@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. BASE DE DATOS SIMULADA ---
+# --- 2. GESTIÓN DE MEMORIA (SESSION STATE) ---
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 if 'setup_completo' not in st.session_state:
@@ -19,223 +19,310 @@ if 'setup_completo' not in st.session_state:
 if 'usuario' not in st.session_state:
     st.session_state['usuario'] = {}
 if 'puntos' not in st.session_state:
-    st.session_state['puntos'] = 1000 
+    st.session_state['puntos'] = 1000  # Bono inicial
 if 'repositorio' not in st.session_state:
+    # Datos iniciales de ejemplo
     st.session_state['repositorio'] = [
-        {"nombre": "Silabo Estática 2026.pdf", "carrera": "Ingeniería Civil", "area": "Estructuras", "autor": "Docente Admin", "rol_autor": "Docente", "fecha": "2026-01-10"},
-        {"nombre": "Examen Parcial Pasado.pdf", "carrera": "Ingeniería Civil", "area": "Geotecnia", "autor": "Pepito Estudiante", "rol_autor": "Estudiante", "fecha": "2026-01-12"}
+        {"nombre": "Norma E.030 Sismorresistente.pdf", "carrera": "Ingeniería Civil", "area": "Estructuras", "autor": "Ing. Admin", "rol_autor": "Docente", "fecha": "2026-01-15"},
+        {"nombre": "Plano Topográfico Lote 4.dwg", "carrera": "Topografía", "area": "Levantamientos", "autor": "Juan Perez", "rol_autor": "Estudiante", "fecha": "2026-01-16"}
     ]
 
-# --- 3. LISTAS DE DATOS ---
+# --- 3. DATOS PERÚ ---
 UNIVERSIDADES = ["UPN", "UNI", "PUCP", "UPC", "UTP", "UNMSM", "UCV", "URP", "UNFV", "SENCICO", "Otra"]
 CARRERAS = {
-    "Ingeniería Civil": ["Estructuras", "Geotecnia", "Hidráulica", "Transportes", "Construcción"],
-    "Arquitectura": ["Diseño", "Urbanismo", "Interiores"],
-    "Ing. de Minas": ["Seguridad", "Operaciones", "Planeamiento"],
-    "Topografía": ["Cadastral", "Satelital"]
+    "Ingeniería Civil": ["Estructuras", "Geotecnia", "Hidráulica", "Vías y Transportes", "Construcción"],
+    "Arquitectura": ["Diseño", "Urbanismo", "Interiores", "Paisajismo"],
+    "Ing. de Minas": ["Seguridad", "Operaciones", "Planeamiento", "Geología"],
+    "Topografía": ["Cadastral", "Satelital", "Geodesia"]
 }
 
-# --- 4. ESTILOS CSS ---
+# --- 4. ESTILOS CSS (CORRECCIÓN DE COLORES Y TEXTO) ---
+# Aquí forzamos colores oscuros para el texto y fondos claros para los contenedores
 st.markdown("""
 <style>
-    .stApp {background-color: #F4F6F7;}
+    /* Fondo General más claro */
+    [data-testid="stAppViewContainer"] {
+        background-color: #F2F4F4;
+    }
+    
+    /* FORZAR TEXTO OSCURO EN TODA LA APP */
+    h1, h2, h3, h4, h5, h6, p, div, span, label {
+        color: #17202A !important;
+    }
+    
+    /* Caja de Login */
     .login-box {
-        background: white; padding: 40px; border-radius: 15px;
-        box-shadow: 0px 4px 20px rgba(0,0,0,0.1); border-top: 6px solid #C0392B;
+        background-color: #FFFFFF;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+        border-top: 6px solid #C0392B; /* Rojo Ladrillo */
         text-align: center;
     }
-    .profile-card {
-        background: white; padding: 20px; border-radius: 10px;
-        border-left: 5px solid #2980B9; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    
+    /* Tarjetas de Archivos */
+    .file-card {
+        background-color: #FFFFFF;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 5px solid #2980B9;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
-    .role-badge-estudiante {
-        background-color: #D6EAF8; color: #2E86C1; padding: 5px 10px; border-radius: 15px; font-weight: bold; font-size: 0.8rem;
+    
+    /* Billetera Digital */
+    .wallet-card {
+        background: linear-gradient(135deg, #154360 0%, #1A5276 100%);
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        color: white !important; /* Excepción: Texto blanco en la billetera */
+        margin-bottom: 20px;
     }
-    .role-badge-docente {
-        background-color: #FCF3CF; color: #B7950B; padding: 5px 10px; border-radius: 15px; font-weight: bold; font-size: 0.8rem;
+    .wallet-card div { color: white !important; } /* Asegurar hijos blancos */
+    
+    /* Etiquetas de Rol */
+    .badge-estudiante {
+        background-color: #D6EAF8; color: #2874A6 !important; 
+        padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8rem;
+    }
+    .badge-docente {
+        background-color: #FCF3CF; color: #9A7D0A !important; 
+        padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8rem;
+    }
+    
+    /* Ajuste de Botones */
+    div.stButton > button {
+        color: #FFFFFF !important; /* Texto botón blanco */
+        background-color: #2C3E50;
+        border: none;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # =======================================================
-# PÁGINA 1: LOGIN
+# PANTALLA 1: INICIO DE SESIÓN
 # =======================================================
 def login_page():
     col1, col2, col3 = st.columns([1, 1.5, 1])
     with col2:
         st.markdown("<br><br>", unsafe_allow_html=True)
+        # Contenedor HTML puro para control total del diseño
         st.markdown("""
         <div class="login-box">
-            <img src="https://cdn-icons-png.flaticon.com/512/9387/9387877.png" width="80">
-            <h2>F.I.T.A. ACCESS</h2>
-            <p>Identificación Digital para Ingenieros</p>
+            <img src="https://cdn-icons-png.flaticon.com/512/9387/9387877.png" width="80" style="margin-bottom:15px;">
+            <h1 style="margin:0; font-size:2rem; color:#154360 !important;">F.I.T.A. HUB</h1>
+            <p style="color:#7F8C8D !important; font-size:1.1rem;">Plataforma de Ingeniería Peruana</p>
+            <hr>
+            <p style="font-size:0.9rem; color:#2C3E50 !important;">Acceso exclusivo comunidad universitaria</p>
         </div>
         """, unsafe_allow_html=True)
-        st.write("")
-        if st.button("🔐 Acceder con Google", type="primary", use_container_width=True):
-            with st.spinner("Verificando identidad..."):
-                time.sleep(1)
+        
+        st.write("") 
+        
+        # Botón nativo de Streamlit
+        if st.button("🔐 Iniciar Sesión con Google", type="primary", use_container_width=True):
+            with st.spinner("Conectando con servidores..."):
+                time.sleep(1.5)
                 st.session_state['logged_in'] = True
-                # Datos simulados de la cuenta Google
-                st.session_state['usuario']['nombre'] = "Luigi" 
+                # Simulamos datos recibidos de Google
+                st.session_state['usuario']['nombre'] = "Ing. Luigi"
                 st.session_state['usuario']['email'] = "luigi@upn.pe"
                 st.session_state['usuario']['foto'] = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                 st.rerun()
 
 # =======================================================
-# PÁGINA 2: ONBOARDING (CONFIGURACIÓN DE ROL)
+# PANTALLA 2: REGISTRO DE ROL (ONBOARDING)
 # =======================================================
 def onboarding_page():
     st.markdown("<h2 style='text-align:center;'>🛠️ Configuración de Perfil</h2>", unsafe_allow_html=True)
     st.write("---")
 
     with st.container():
-        # PREGUNTA CLAVE: ¿ESTUDIANTE O DOCENTE?
-        rol = st.radio("Selecciona tu Rol Académico:", ["Estudiante", "Docente / Maestro"], horizontal=True)
+        # Selección de Rol
+        rol_seleccionado = st.radio("¿Cuál es tu rol académico?", ["Estudiante", "Docente / Maestro"], horizontal=True)
         
-        col1, col2 = st.columns(2)
-        with col1:
-            uni = st.selectbox("Universidad / Institución", UNIVERSIDADES)
-            carrera_sel = st.selectbox("Carrera / Facultad", list(CARRERAS.keys()))
+        c1, c2 = st.columns(2)
+        with c1:
+            uni = st.selectbox("Universidad / Instituto", UNIVERSIDADES)
+            carrera = st.selectbox("Carrera Profesional", list(CARRERAS.keys()))
         
-        with col2:
-            especialidad = st.selectbox("Área de Enfoque", CARRERAS[carrera_sel])
+        with c2:
+            area = st.selectbox("Especialidad Principal", CARRERAS[carrera])
             
-            # LÓGICA DINÁMICA SEGÚN ROL
-            if rol == "Estudiante":
-                nivel_dato = st.slider("Ciclo Actual", 1, 10, 5)
-                etiqueta_nivel = f"Ciclo {nivel_dato}"
+            # Condicional según el rol
+            if rol_seleccionado == "Estudiante":
+                nivel = st.slider("Ciclo Actual", 1, 10, 5)
+                nivel_txt = f"Ciclo {nivel}"
             else:
-                nivel_dato = st.selectbox("Grado Académico", ["Bachiller", "Ingeniero Titulado", "Magister", "Doctor"])
-                etiqueta_nivel = nivel_dato
-
-        st.info(f"Registrando usuario como: **{rol}** de **{carrera_sel}**")
+                nivel_txt = st.selectbox("Grado Académico", ["Bachiller", "Ing. Titulado", "Magíster", "Doctor"])
         
-        if st.button("💾 Finalizar Registro", type="primary", use_container_width=True):
-            st.session_state['usuario']['rol'] = "Estudiante" if rol == "Estudiante" else "Docente"
+        st.info("🎁 **Bono de Bienvenida:** Recibirás 1000 FitaCoins al completar el registro.")
+        
+        if st.button("💾 Guardar Datos", type="primary", use_container_width=True):
+            st.session_state['usuario']['rol'] = "Estudiante" if rol_seleccionado == "Estudiante" else "Docente"
             st.session_state['usuario']['universidad'] = uni
-            st.session_state['usuario']['carrera'] = carrera_sel
-            st.session_state['usuario']['especialidad'] = especialidad
-            st.session_state['usuario']['nivel'] = etiqueta_nivel # Guarda "Ciclo 5" o "Magister"
+            st.session_state['usuario']['carrera'] = carrera
+            st.session_state['usuario']['especialidad'] = area
+            st.session_state['usuario']['nivel'] = nivel_txt
             st.session_state['setup_completo'] = True
+            st.balloons()
+            time.sleep(1)
             st.rerun()
 
 # =======================================================
-# PÁGINA 3: SISTEMA PRINCIPAL
+# PANTALLA 3: SISTEMA PRINCIPAL (APP)
 # =======================================================
 def main_app():
     # --- BARRA LATERAL ---
     with st.sidebar:
-        st.image(st.session_state['usuario']['foto'], width=60)
-        st.write(f"**{st.session_state['usuario']['nombre']}**")
+        # Foto y Datos
+        st.image(st.session_state['usuario']['foto'], width=70)
+        st.markdown(f"**{st.session_state['usuario']['nombre']}**")
         
-        # Etiqueta de Rol debajo del nombre
-        rol_user = st.session_state['usuario']['rol']
-        if rol_user == "Estudiante":
-            st.markdown(f'<span class="role-badge-estudiante">🎓 Estudiante</span>', unsafe_allow_html=True)
+        # Badge de Rol
+        if st.session_state['usuario']['rol'] == "Estudiante":
+            st.markdown('<span class="badge-estudiante">🎓 Estudiante</span>', unsafe_allow_html=True)
         else:
-            st.markdown(f'<span class="role-badge-docente">👨‍🏫 Docente</span>', unsafe_allow_html=True)
+            st.markdown('<span class="badge-docente">👨‍🏫 Docente</span>', unsafe_allow_html=True)
             
-        st.write(f"_{st.session_state['usuario']['universidad']}_")
+        st.caption(f"{st.session_state['usuario']['universidad']}")
         
         st.markdown("---")
-        st.markdown(f"💰 **Billetera:** {st.session_state['puntos']} pts")
-        st.markdown("---")
         
-        menu = st.radio("Menú", ["📂 Repositorio", "📤 Subir Archivo", "👤 Mi Perfil"])
+        # Billetera
+        st.markdown(f"""
+        <div class="wallet-card">
+            <div style="font-size:0.8rem; text-transform:uppercase;">Saldo F.I.T.A.</div>
+            <div style="font-size:2rem; font-weight:bold; color:#F1C40F !important;">{st.session_state['puntos']}</div>
+            <div style="font-size:0.8rem;">puntos disponibles</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        menu = st.radio("Menú", ["📂 Repositorio", "📤 Subir y Ganar (+10)", "👤 Mi Perfil"])
         
         st.markdown("---")
-        if st.button("Salir"):
+        if st.button("Cerrar Sesión"):
             st.session_state['logged_in'] = False
             st.session_state['setup_completo'] = False
             st.rerun()
 
-    # --- PESTAÑA PERFIL (AQUÍ SE VEN LOS DATOS) ---
-    if menu == "👤 Mi Perfil":
-        st.title("👤 Datos del Usuario")
+    # --- PESTAÑA 1: REPOSITORIO ---
+    if menu == "📂 Repositorio":
+        st.title("📂 Biblioteca Técnica")
         
-        # Diseño de Tarjeta de Identificación
+        # Filtros
+        colf1, colf2 = st.columns(2)
+        with colf1:
+            filtro_carrera = st.selectbox("Filtrar por Carrera", ["Todas"] + list(CARRERAS.keys()))
+        
+        # Mostrar Archivos
+        archivos = st.session_state['repositorio']
+        if filtro_carrera != "Todas":
+            archivos = [f for f in archivos if f['carrera'] == filtro_carrera]
+            
+        if not archivos:
+            st.warning("No hay archivos en esta categoría.")
+        
+        for idx, file in enumerate(archivos):
+            # Tarjeta de archivo
+            with st.container():
+                st.markdown(f"""
+                <div class="file-card">
+                    <div style="display:flex; justify-content:space-between;">
+                        <div>
+                            <h4 style="margin:0;">📄 {file['nombre']}</h4>
+                            <small><b>{file['carrera']}</b> | {file['area']}</small><br>
+                            <small style="color:#566573 !important;">Subido por: {file['autor']} ({file.get('rol_autor','Usuario')}) | {file['fecha']}</small>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Botón de Descarga (fuera del HTML para que funcione la lógica Python)
+                col_d1, col_d2 = st.columns([4, 1])
+                with col_d2:
+                    if st.button(f"⬇️ Bajar (-20 pts)", key=f"btn_{idx}"):
+                        if st.session_state['puntos'] >= 20:
+                            st.session_state['puntos'] -= 20
+                            st.toast("✅ Descarga iniciada. Puntos descontados.", icon="📉")
+                        else:
+                            st.error("❌ Saldo insuficiente.")
+                st.divider()
+
+    # --- PESTAÑA 2: SUBIR ARCHIVOS ---
+    elif menu == "📤 Subir y Ganar (+10)":
+        st.title("📤 Aportar Conocimiento")
+        st.info("Gana **10 Puntos** por cada documento académico útil que compartas.")
+        
+        with st.form("upload_form"):
+            uploaded = st.file_uploader("Seleccionar Archivo (PDF, Excel, DWG)", type=["pdf","xlsx","dwg","docx"])
+            desc = st.text_input("Descripción breve")
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                cat_carrera = st.selectbox("Carrera", list(CARRERAS.keys()))
+            with c2:
+                cat_area = st.selectbox("Especialidad", CARRERAS[cat_carrera])
+            
+            if st.form_submit_button("🚀 Publicar Aporte"):
+                if uploaded:
+                    st.session_state['puntos'] += 10
+                    nuevo_file = {
+                        "nombre": uploaded.name,
+                        "carrera": cat_carrera,
+                        "area": cat_area,
+                        "autor": st.session_state['usuario']['nombre'],
+                        "rol_autor": st.session_state['usuario']['rol'],
+                        "fecha": datetime.now().strftime("%Y-%m-%d")
+                    }
+                    st.session_state['repositorio'].append(nuevo_file)
+                    st.success("¡Archivo subido exitosamente! (+10 pts)")
+                    time.sleep(1.5)
+                    st.rerun()
+
+    # --- PESTAÑA 3: PERFIL ---
+    elif menu == "👤 Mi Perfil":
+        st.title("👤 Credencial Digital")
+        
+        # Tarjeta de Perfil
         st.markdown(f"""
-        <div class="profile-card">
+        <div style="background:white; padding:30px; border-radius:10px; border-top: 5px solid #1F618D; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
             <div style="display:flex; align-items:center; gap:20px;">
-                <img src="{st.session_state['usuario']['foto']}" width="100" style="border-radius:50%;">
+                <img src="{st.session_state['usuario']['foto']}" width="120" style="border-radius:50%; border:3px solid #EBEDEF;">
                 <div>
-                    <h2 style="margin:0;">{st.session_state['usuario']['nombre']}</h2>
-                    <p style="color:grey; margin:0;">{st.session_state['usuario']['email']}</p>
+                    <h2 style="margin:0; color:#154360 !important;">{st.session_state['usuario']['nombre'].upper()}</h2>
+                    <p style="margin:0; color:grey !important;">{st.session_state['usuario']['email']}</p>
                     <br>
-                    <span class="{'role-badge-estudiante' if st.session_state['usuario']['rol'] == 'Estudiante' else 'role-badge-docente'}">
+                    <span style="background:#EB984E; color:white; padding:5px 15px; border-radius:20px; font-weight:bold;">
                         {st.session_state['usuario']['rol'].upper()}
                     </span>
                 </div>
             </div>
             <hr>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
                 <div>
-                    <small>INSTITUCIÓN</small><br>
-                    <b>{st.session_state['usuario']['universidad']}</b>
+                    <label style="font-weight:bold; font-size:0.8rem; color:#85929E !important;">UNIVERSIDAD</label>
+                    <div style="font-size:1.1rem;">{st.session_state['usuario']['universidad']}</div>
                 </div>
                 <div>
-                    <small>CARRERA</small><br>
-                    <b>{st.session_state['usuario']['carrera']}</b>
+                    <label style="font-weight:bold; font-size:0.8rem; color:#85929E !important;">CARRERA</label>
+                    <div style="font-size:1.1rem;">{st.session_state['usuario']['carrera']}</div>
                 </div>
                 <div>
-                    <small>ESPECIALIDAD</small><br>
-                    <b>{st.session_state['usuario']['especialidad']}</b>
+                    <label style="font-weight:bold; font-size:0.8rem; color:#85929E !important;">NIVEL ACADÉMICO</label>
+                    <div style="font-size:1.1rem;">{st.session_state['usuario']['nivel']}</div>
                 </div>
                 <div>
-                    <small>{'CICLO ACTUAL' if st.session_state['usuario']['rol'] == 'Estudiante' else 'GRADO ACADÉMICO'}</small><br>
-                    <b>{st.session_state['usuario']['nivel']}</b>
+                    <label style="font-weight:bold; font-size:0.8rem; color:#85929E !important;">ESPECIALIDAD</label>
+                    <div style="font-size:1.1rem;">{st.session_state['usuario']['especialidad']}</div>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-    # --- PESTAÑA REPOSITORIO ---
-    elif menu == "📂 Repositorio":
-        st.title("📂 Archivos Académicos")
-        
-        st.write("Explora documentos subidos por Estudiantes y Docentes.")
-        
-        for arch in st.session_state['repositorio']:
-            with st.container():
-                c1, c2 = st.columns([3, 1])
-                with c1:
-                    icon = "👨‍🏫" if arch.get('rol_autor') == "Docente" else "🎓"
-                    st.subheader(f"📄 {arch['nombre']}")
-                    st.caption(f"{icon} Subido por: {arch['autor']} ({arch.get('rol_autor', 'Usuario')}) | {arch['carrera']}")
-                with c2:
-                    if st.button(f"⬇️ Bajar (-20 pts)", key=arch['nombre']):
-                        if st.session_state['puntos'] >= 20:
-                            st.session_state['puntos'] -= 20
-                            st.toast("Descarga iniciada", icon="✅")
-                        else:
-                            st.error("Saldo insuficiente")
-                st.divider()
-
-    # --- PESTAÑA SUBIR ---
-    elif menu == "📤 Subir Archivo":
-        st.title("📤 Aportar Material")
-        with st.form("up_form"):
-            file = st.file_uploader("Archivo")
-            desc = st.text_input("Descripción")
-            if st.form_submit_button("Subir"):
-                if file:
-                    st.session_state['puntos'] += 10
-                    # Guardamos quién lo subió y qué rol tiene
-                    st.session_state['repositorio'].append({
-                        "nombre": file.name,
-                        "carrera": st.session_state['usuario']['carrera'],
-                        "area": st.session_state['usuario']['especialidad'],
-                        "autor": st.session_state['usuario']['nombre'],
-                        "rol_autor": st.session_state['usuario']['rol'], # IMPORTANTE: Guardamos el rol
-                        "fecha": datetime.now().strftime("%Y-%m-%d")
-                    })
-                    st.success("Subido correctamente (+10 pts)")
-                    time.sleep(1)
-                    st.rerun()
-
 # =======================================================
-# MAIN
+# CONTROL DE FLUJO
 # =======================================================
 if not st.session_state['logged_in']:
     login_page()
