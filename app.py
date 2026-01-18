@@ -1,173 +1,200 @@
 import streamlit as st
 import pandas as pd
-from io import BytesIO
 import time
+from datetime import datetime
 
-# --- CONFIGURACIÓN DE PÁGINA ---
+# --- CONFIGURACIÓN INICIAL (CERO DATOS PREVIOS) ---
 st.set_page_config(
-    page_title="F.I.T.A. Hub",
+    page_title="F.I.T.A. System",
     page_icon="🏗️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILOS CSS (Diseño Bonito) ---
+# --- GESTIÓN DE MEMORIA (SESSION STATE) ---
+# Esto permite que lo que subas se mantenga en pantalla mientras usas la app
+if 'repositorio' not in st.session_state:
+    st.session_state['repositorio'] = []
+if 'publicaciones' not in st.session_state:
+    st.session_state['publicaciones'] = []
+
+# --- ESTILOS VISUALES (PROFESIONAL & MINIMALISTA) ---
 st.markdown("""
 <style>
-    .main-header {font-size: 2.5rem; color: #1E3A8A; font-weight: bold;}
-    .sub-text {font-size: 1.1rem; color: #4B5563;}
-    div.stButton > button:first-child {
-        background-color: #1E3A8A;
+    .main-title {font-size: 2.2rem; color: #1B2631; font-weight: bold;}
+    .section-header {font-size: 1.5rem; color: #283747; border-bottom: 2px solid #D5D8DC; padding-bottom: 10px;}
+    .stButton>button {
+        background-color: #212F3D;
         color: white;
-        border-radius: 8px;
-        padding: 10px 24px;
+        border-radius: 5px;
+        width: 100%;
     }
-    .stAlert {border-radius: 10px;}
+    .file-card {
+        background-color: #F8F9F9;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 5px solid #2E86C1;
+        margin-bottom: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- MENÚ LATERAL ---
+# --- BARRA LATERAL (NAVEGACIÓN) ---
 with st.sidebar:
-    st.title("🏗️ F.I.T.A. SYSTEM")
-    st.caption("Plataforma de Ingeniería Civil")
+    st.image("https://cdn-icons-png.flaticon.com/512/2554/2554044.png", width=80)
+    st.markdown("### F.I.T.A. SYSTEM")
     st.markdown("---")
     
-    opcion = st.radio(
-        "Navegación:", 
-        ["🏠 Inicio", "📚 Biblioteca Técnica", "📊 Visor de Metrados", "🧮 Calculadora Estructural", "☁️ Repositorio"]
+    menu = st.radio(
+        "Módulos del Sistema:", 
+        ["🏠 Panel de Control", "☁️ Repositorio Digital", "📊 Analizador Excel", "📝 Publicar Artículo"]
     )
     
     st.markdown("---")
-    st.info("👤 **Ing. Luigi**\n\n🟢 Estado: Online")
+    # Widget de fecha real (sin asunciones)
+    fecha_hoy = datetime.now().strftime("%d/%m/%Y")
+    st.caption(f"📅 Fecha: {fecha_hoy}")
+    st.caption("🟢 Sistema: En Línea")
 
-# --- PÁGINA: INICIO ---
-if opcion == "🏠 Inicio":
-    st.markdown('<p class="main-header">Centro de Comando F.I.T.A.</p>', unsafe_allow_html=True)
-    st.markdown("Bienvenido al sistema de gestión de proyectos y análisis estructural.")
+# =========================================================
+# MÓDULO 1: PANEL DE CONTROL (DASHBOARD VACÍO)
+# =========================================================
+if menu == "🏠 Panel de Control":
+    st.markdown('<p class="main-title">Bienvenido al Centro de Gestión</p>', unsafe_allow_html=True)
+    st.write("Resumen general de la plataforma F.I.T.A.")
     
-    # Dashboard de Métricas
+    # Métricas vacías para que tú las veas limpias
     col1, col2, col3 = st.columns(3)
-    col1.metric("Sprint Estructuras", "Día 1 / 30", "En Curso")
-    col2.metric("Meta Principal", "Hibbeler Materiales", "Prioridad Alta")
-    col3.metric("Próximo Hito", "Simulacro Estática", "Viernes")
+    col1.metric("Archivos en Nube", f"{len(st.session_state['repositorio'])}")
+    col2.metric("Artículos Publicados", f"{len(st.session_state['publicaciones'])}")
+    col3.metric("Usuarios Activos", "1 (Admin)")
 
-    st.success("✅ **Sistema Operativo:** Conectado a GitHub y Streamlit Cloud.")
-    
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.subheader("📅 Agenda del Día")
-        st.write("- **Bloque I:** Teoría de Esfuerzos.")
-        st.write("- **Bloque II:** Resolución de problemas tipo examen.")
-    
-    with col_b:
-        st.subheader("📢 Avisos")
-        st.warning("Recuerda subir los metrados actualizados al repositorio antes de las 18:00.")
+    st.info("ℹ️ El sistema está listo. Navega por el menú lateral para subir tu primer archivo o realizar cálculos.")
 
-# --- PÁGINA: BIBLIOTECA (LATEX) ---
-elif opcion == "📚 Biblioteca Técnica":
-    st.title("📚 Artículos de Investigación")
-    st.write("Visualización de ecuaciones complejas y teoría avanzada.")
+# =========================================================
+# MÓDULO 2: REPOSITORIO DIGITAL (SUBIDA Y PUBLICACIÓN)
+# =========================================================
+elif menu == "☁️ Repositorio Digital":
+    st.markdown('<p class="section-header">Gestión de Archivos y Planos</p>', unsafe_allow_html=True)
     
-    tab1, tab2 = st.tabs(["📄 Análisis Matricial", "📝 Editor de Notas"])
+    col_upload, col_view = st.columns([1, 2])
     
-    with tab1:
-        st.header("Matriz de Rigidez en Pórticos")
-        st.write("La ecuación fundamental para un elemento de pórtico plano es:")
+    with col_upload:
+        st.subheader("📤 Subir Nuevo Archivo")
+        st.write("Sube PDFs, DWG, Excel o Imágenes para almacenarlos en la sesión.")
         
-        # Ecuación Matemática Profesional
-        st.latex(r'''
-        \begin{bmatrix} F_1 \\ M_1 \\ F_2 \\ M_2 \end{bmatrix} = 
-        \frac{EI}{L^3} 
-        \begin{bmatrix} 
-        12 & 6L & -12 & 6L \\ 
-        6L & 4L^2 & -6L & 2L^2 \\ 
-        -12 & -6L & 12 & -6L \\ 
-        6L & 2L^2 & -6L & 4L^2 
-        \end{bmatrix}
-        \begin{bmatrix} \delta_1 \\ \theta_1 \\ \delta_2 \\ \theta_2 \end{bmatrix}
-        ''')
+        archivo = st.file_uploader("Seleccionar archivo", type=["pdf", "docx", "xlsx", "dwg", "jpg", "png"])
+        descripcion = st.text_input("Descripción corta del archivo (Opcional)")
         
-        st.info("Esta formulación es la base del software SAP2000 y ETABS.")
-    
-    with tab2:
-        st.subheader("Tus Notas Rápidas")
-        nota = st.text_area("Escribe aquí ideas o borradores:", height=150)
-        if st.button("Guardar Nota"):
-            st.toast("Nota guardada temporalmente.", icon="💾")
+        if st.button("Subir al Repositorio"):
+            if archivo is not None:
+                # Simulación de carga
+                barra = st.progress(0)
+                for i in range(100):
+                    time.sleep(0.005)
+                    barra.progress(i + 1)
+                
+                # Guardar en memoria
+                nuevo_archivo = {
+                    "nombre": archivo.name,
+                    "tipo": archivo.type,
+                    "desc": descripcion if descripcion else "Sin descripción",
+                    "fecha": datetime.now().strftime("%H:%M:%S")
+                }
+                st.session_state['repositorio'].append(nuevo_archivo)
+                st.success("✅ Archivo cargado exitosamente.")
+                time.sleep(1)
+                st.rerun() # Recarga para mostrar el archivo
+            else:
+                st.error("⚠️ Por favor selecciona un archivo primero.")
 
-# --- PÁGINA: VISOR EXCEL ---
-elif opcion == "📊 Visor de Metrados":
-    st.title("📊 Análisis de Hojas de Cálculo")
-    st.markdown("Sube tus archivos `.xlsx` para visualizar tablas y gráficos sin abrir Excel.")
+    with col_view:
+        st.subheader("🗂️ Archivos Disponibles")
+        
+        if len(st.session_state['repositorio']) == 0:
+            st.info("📂 El repositorio está vacío. Sube tu primer documento en el panel izquierdo.")
+        else:
+            for file in reversed(st.session_state['repositorio']):
+                st.markdown(f"""
+                <div class="file-card">
+                    <b>📄 {file['nombre']}</b><br>
+                    <small style="color:grey">{file['desc']} | Subido a las: {file['fecha']}</small>
+                </div>
+                """, unsafe_allow_html=True)
+
+# =========================================================
+# MÓDULO 3: ANALIZADOR EXCEL (HERRAMIENTA LIMPIA)
+# =========================================================
+elif menu == "📊 Analizador Excel":
+    st.markdown('<p class="section-header">Visor de Hojas de Cálculo</p>', unsafe_allow_html=True)
+    st.write("Herramienta para visualizar tablas y gráficos de metrados o diseños sin abrir Excel.")
     
-    archivo = st.file_uploader("Arrastra tu Excel aquí", type=["xlsx"])
+    uploaded_file = st.file_uploader("Arrastra tu archivo .xlsx aquí", type=["xlsx"])
     
-    if archivo:
+    if uploaded_file:
         try:
-            df = pd.read_excel(archivo)
-            st.success("Archivo procesado con éxito.")
+            df = pd.read_excel(uploaded_file)
+            st.success(f"Archivo **{uploaded_file.name}** procesado.")
             
-            with st.expander("🔍 Ver Tabla Completa", expanded=True):
+            # Pestañas para organizar la vista
+            tab1, tab2 = st.tabs(["📄 Tabla de Datos", "📈 Gráficos Automáticos"])
+            
+            with tab1:
                 st.dataframe(df, use_container_width=True)
             
-            st.subheader("📈 Análisis Rápido")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("**Estadísticas:**")
-                st.write(df.describe())
-            with col2:
-                st.write("**Gráfico de Tendencias:**")
-                st.line_chart(df.select_dtypes(include=['float', 'int']))
-                
+            with tab2:
+                st.write("Visualización rápida de columnas numéricas:")
+                datos_numericos = df.select_dtypes(include=['float', 'int'])
+                if not datos_numericos.empty:
+                    st.line_chart(datos_numericos)
+                else:
+                    st.warning("No se encontraron datos numéricos para graficar.")
+                    
         except Exception as e:
-            st.error(f"Error leyendo el archivo: {e}")
+            st.error(f"Error al leer el archivo: {e}")
 
-# --- PÁGINA: CALCULADORA ---
-elif opcion == "🧮 Calculadora Estructural":
-    st.title("🧮 Calculadora de Vigas")
-    st.write("Cálculo rápido para viga simplemente apoyada con carga distribuida.")
+# =========================================================
+# MÓDULO 4: PUBLICACIÓN DE ARTÍCULOS (BLOG)
+# =========================================================
+elif menu == "📝 Publicar Artículo":
+    st.markdown('<p class="section-header">Gestión de Conocimiento</p>', unsafe_allow_html=True)
     
-    col1, col2 = st.columns(2)
-    with col1:
-        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Beam_UDL.svg/1200px-Beam_UDL.svg.png", caption="Esquema de Carga")
-    with col2:
-        w = st.number_input("Carga Distribuida (w) [kg/m]", value=1500.0, step=100.0)
-        L = st.number_input("Longitud de la Viga (L) [m]", value=6.0, step=0.5)
-        st.markdown("### Resultados:")
+    tab_editor, tab_feed = st.tabs(["✍️ Editor", "📰 Publicaciones"])
+    
+    with tab_editor:
+        st.subheader("Redactar Nuevo Documento")
         
-        if st.button("Calcular Esfuerzos"):
-            M_max = (w * L**2) / 8
-            V_max = (w * L) / 2
-            
-            st.success(f"🔹 Momento Máximo (+): **{M_max:,.2f} kg·m**")
-            st.info(f"🔹 Cortante Máximo (V): **{V_max:,.2f} kg**")
-            
-            # Mostrar fórmula usada
-            st.latex(r"M_{max} = \frac{w \cdot L^2}{8}")
+        titulo_art = st.text_input("Título del Artículo / Nota")
+        autor_art = st.text_input("Autor", value="Ing. Luigi")
+        contenido_art = st.text_area("Contenido (Soporta Markdown y LaTeX)", height=200, placeholder="Escribe aquí tu investigación o apuntes...")
+        
+        st.caption("Tip: Puedes usar LaTeX escribiendo entre signos de dólar. Ej: $E = mc^2$")
+        
+        if st.button("Publicar en la Plataforma"):
+            if titulo_art and contenido_art:
+                nueva_pub = {
+                    "titulo": titulo_art,
+                    "autor": autor_art,
+                    "cuerpo": contenido_art,
+                    "fecha": datetime.now().strftime("%d/%m %H:%M")
+                }
+                st.session_state['publicaciones'].append(nueva_pub)
+                st.success("Publicado correctamente.")
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.warning("El título y el contenido son obligatorios.")
 
-# --- PÁGINA: REPOSITORIO ---
-elif opcion == "☁️ Repositorio":
-    st.title("☁️ Nube Privada F.I.T.A.")
-    st.markdown("Gestión de archivos PDF, DWG y Planos.")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("📤 Subir Documento")
-        up = st.file_uploader("Selecciona archivo", type=["pdf", "dwg", "docx"])
-        if up:
-            barra = st.progress(0)
-            for i in range(100):
-                time.sleep(0.01)
-                barra.progress(i + 1)
-            st.success(f"¡{up.name} subido a la nube segura!")
-            
-    with col2:
-        st.subheader("📥 Descargas Disponibles")
-        st.write("Archivos recientes:")
-        st.download_button("📄 Plan_Sprint_30Dias.pdf", data="Simulacion", file_name="Plan.pdf")
-        st.download_button("🏗️ Detalle_Viga_V101.dwg", data="Simulacion", file_name="Plano.dwg")
+    with tab_feed:
+        st.subheader("Artículos Recientes")
+        
+        if len(st.session_state['publicaciones']) == 0:
+            st.write("No hay artículos publicados aún.")
+        else:
+            for pub in reversed(st.session_state['publicaciones']):
+                with st.expander(f"📌 {pub['titulo']} - Por {pub['autor']} ({pub['fecha']})", expanded=True):
+                    st.markdown(pub['cuerpo'])
 
 # --- PIE DE PÁGINA ---
 st.markdown("---")
-st.markdown("© 2026 F.I.T.A. Construction S.A.C. | Desarrollado por Ing. Luigi")
+st.caption("© 2026 F.I.T.A. Construction | Plataforma Privada")
