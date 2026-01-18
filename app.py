@@ -19,7 +19,7 @@ if 'setup_completo' not in st.session_state:
 if 'usuario' not in st.session_state:
     st.session_state['usuario'] = {}
 if 'puntos' not in st.session_state:
-    st.session_state['puntos'] = 1000  # Bono inicial
+    st.session_state['puntos'] = 1000
 if 'transacciones' not in st.session_state:
     st.session_state['transacciones'] = [
         {"tipo": "Ingreso", "monto": 1000, "desc": "Bono de Bienvenida", "fecha": datetime.now().strftime("%Y-%m-%d")}
@@ -29,9 +29,51 @@ if 'repositorio' not in st.session_state:
         {"nombre": "Norma E.030 Diseño Sismorresistente.pdf", "carrera": "Ingeniería Civil", "area": "Estructuras", "autor": "Admin Sistema", "rol_autor": "Docente", "fecha": "2026-01-15", "desc": "Norma actualizada del RNE."},
         {"nombre": "Plantilla Metrados Acero.xlsx", "carrera": "Ingeniería Civil", "area": "Construcción", "autor": "Luigi", "rol_autor": "Estudiante", "fecha": "2026-01-16", "desc": "Excel automatizado para vigas."}
     ]
-# Lista simulada de amigos para transferirles puntos
 if 'amigos' not in st.session_state:
     st.session_state['amigos'] = ["Carlos (Civil)", "Maria (Arqui)", "Jorge (Minas)", "Ana (Topografía)"]
+
+# --- NUEVO: GESTIÓN DE TEMAS ---
+if 'tema_actual' not in st.session_state:
+    st.session_state['tema_actual'] = "🔵 Pastel Estructural (Azul)"
+
+# Diccionario de Paletas de Colores (PASTELES PARA FONDO, OSCUROS PARA TEXTO)
+TEMAS = {
+    "🔵 Pastel Estructural (Azul)": {
+        "fondo_app": "#F0F8FF",       # AliceBlue
+        "fondo_sidebar": "#FFFFFF",
+        "acento": "#2980B9",          # Azul fuerte para bordes
+        "boton": "#2C3E50",           # Azul oscuro
+        "badge_est": "#D6EAF8",
+        "badge_doc": "#FCF3CF"
+    },
+    "⚪ Pastel Concreto (Gris)": {
+        "fondo_app": "#F4F6F6",       # Gris muy claro
+        "fondo_sidebar": "#FDFEFE",
+        "acento": "#7F8C8D",          # Gris Cemento
+        "boton": "#424949",           # Gris oscuro
+        "badge_est": "#E5E8E8",
+        "badge_doc": "#F9E79F"
+    },
+    "🟢 Pastel Ambiental (Verde)": {
+        "fondo_app": "#E9F7EF",       # Verde menta muy suave
+        "fondo_sidebar": "#FFFFFF",
+        "acento": "#27AE60",          # Verde Esmeralda
+        "boton": "#196F3D",           # Verde Bosque
+        "badge_est": "#D5F5E3",
+        "badge_doc": "#FCF3CF"
+    },
+    "🔴 Pastel Gerencia (Cálido)": {
+        "fondo_app": "#FDEDEC",       # Rojo muy pálido
+        "fondo_sidebar": "#FFFFFF",
+        "acento": "#C0392B",          # Rojo Ladrillo
+        "boton": "#922B21",           # Vino
+        "badge_est": "#FADBD8",
+        "badge_doc": "#F9E79F"
+    }
+}
+
+# Seleccionamos los colores actuales según el estado
+colors = TEMAS[st.session_state['tema_actual']]
 
 # --- 3. LISTAS DE DATOS PERÚ ---
 UNIVERSIDADES = ["UPN", "UNI", "PUCP", "UPC", "UTP", "UNMSM", "UCV", "URP", "SENCICO", "Otra"]
@@ -42,70 +84,72 @@ CARRERAS = {
     "Topografía": ["Levantamientos", "Fotogrametría", "Sistemas GIS"]
 }
 
-# --- 4. ESTILOS CSS (SOLUCIÓN DEFINITIVA DE VISIBILIDAD) ---
-st.markdown("""
+# --- 4. ESTILOS CSS DINÁMICOS (AQUÍ OCURRE LA MAGIA DEL COLOR) ---
+st.markdown(f"""
 <style>
-    /* 1. FORZAR TEMA CLARO EN TODO EL APP (Fondo y Texto) */
-    [data-testid="stAppViewContainer"] {
-        background-color: #F0F2F5 !important; /* Gris muy claro profesional */
+    /* 1. FONDO DINÁMICO SEGÚN TEMA */
+    [data-testid="stAppViewContainer"] {{
+        background-color: {colors['fondo_app']} !important;
         color: #000000 !important;
-    }
-    [data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
+    }}
+    [data-testid="stSidebar"] {{
+        background-color: {colors['fondo_sidebar']} !important;
         border-right: 1px solid #ddd;
-    }
+    }}
 
-    /* 2. FORZAR TEXTO NEGRO UNIVERSALMENTE */
-    /* Esto arregla el problema de "letras oscuras invisibles" */
-    h1, h2, h3, h4, h5, h6, p, div, span, label, li, td, th {
-        color: #1C2833 !important; /* Negro azulado elegante */
-    }
+    /* 2. TEXTO NEGRO SIEMPRE (CONTRASTE PERFECTO) */
+    h1, h2, h3, h4, h5, h6, p, div, span, label, li, td, th {{
+        color: #17202A !important;
+    }}
 
-    /* 3. ARREGLO DE MENÚS DESPLEGABLES (Selectbox) */
-    div[data-baseweb="select"] > div, div[data-baseweb="popover"] {
+    /* 3. ARREGLO DE MENÚS (BLANCOS CON LETRAS NEGRAS) */
+    div[data-baseweb="select"] > div, div[data-baseweb="popover"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
         border: 1px solid #ccc;
-    }
-    div[role="option"] {
+    }}
+    div[role="option"] {{
         color: #000000 !important;
         background-color: #FFFFFF !important;
-    }
-    div[role="option"]:hover {
-        background-color: #D4E6F1 !important; /* Azul claro al pasar mouse */
-    }
+    }}
+    div[role="option"]:hover {{
+        background-color: {colors['badge_est']} !important; /* Usamos el color suave del tema */
+    }}
 
-    /* 4. TARJETAS PERSONALIZADAS */
-    .login-card {
+    /* 4. TARJETAS */
+    .login-card {{
         background-color: #FFFFFF !important; padding: 40px; border-radius: 15px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; border-top: 5px solid #C0392B;
-    }
-    .file-card {
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; 
+        border-top: 5px solid {colors['acento']};
+    }}
+    .file-card {{
         background-color: #FFFFFF !important; padding: 20px; border-radius: 10px;
-        border-left: 5px solid #2980B9; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
+        border-left: 5px solid {colors['acento']}; 
+        margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }}
     
-    /* BILLETERA (TEXTO BLANCO SOLO AQUÍ) */
-    .wallet-box {
+    /* BILLETERA (Siempre mantiene su estilo Premium Azul/Dorado para resaltar) */
+    .wallet-box {{
         background: linear-gradient(135deg, #154360 0%, #1A5276 100%);
         padding: 25px; border-radius: 12px; text-align: center;
         margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    .wallet-box h2, .wallet-box div, .wallet-box span {
-        color: #FFFFFF !important; /* Excepción: Blanco en billetera */
-    }
+    }}
+    .wallet-box h2, .wallet-box div, .wallet-box span {{
+        color: #FFFFFF !important;
+    }}
 
-    /* BADGES */
-    .badge { padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8rem; }
-    .estudiante { background-color: #D6EAF8 !important; color: #154360 !important; }
-    .docente { background-color: #FCF3CF !important; color: #7D6608 !important; }
-
-    /* BOTONES */
-    .stButton > button {
-        background-color: #2C3E50 !important;
+    /* BOTONES DINÁMICOS */
+    .stButton > button {{
+        background-color: {colors['boton']} !important;
         color: #FFFFFF !important;
         border: none;
-    }
+    }}
+    
+    /* BADGES */
+    .badge {{ padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8rem; }}
+    .estudiante {{ background-color: {colors['badge_est']} !important; color: #154360 !important; }}
+    .docente {{ background-color: {colors['badge_doc']} !important; color: #7D6608 !important; }}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -177,7 +221,7 @@ def onboarding_page():
             st.rerun()
 
 # =======================================================
-# PANTALLA 3: APP PRINCIPAL
+# PANTALLA 3: APP PRINCIPAL (CON SELECTOR DE COLOR)
 # =======================================================
 def main_app():
     with st.sidebar:
@@ -188,6 +232,15 @@ def main_app():
         st.markdown(f'<span class="badge {badge_class}">{st.session_state["usuario"]["rol"]}</span>', unsafe_allow_html=True)
             
         st.caption(st.session_state['usuario']['universidad'])
+        st.markdown("---")
+        
+        # --- NUEVO: SELECTOR DE TEMA EN BARRA LATERAL ---
+        with st.expander("🎨 Personalización de Interfaz", expanded=False):
+            tema_selec = st.selectbox("Elige tu estilo:", list(TEMAS.keys()), index=list(TEMAS.keys()).index(st.session_state['tema_actual']))
+            if tema_selec != st.session_state['tema_actual']:
+                st.session_state['tema_actual'] = tema_selec
+                st.rerun()
+        
         st.markdown("---")
         
         st.markdown(f"""
@@ -213,14 +266,13 @@ def main_app():
         col1.metric("Biblioteca", f"{len(st.session_state['repositorio'])} Docs")
         col2.metric("Saldo", f"{st.session_state['puntos']} pts")
         col3.metric("Estado", "Activo")
-        st.info("👋 Hola Luigi. Tienes acceso total al sistema.")
+        st.info(f"🎨 Tema activo: **{st.session_state['tema_actual']}**")
 
     # --- REPOSITORIO ---
     elif menu == "📂 Repositorio":
         st.title("📂 Biblioteca Técnica")
         st.write("Descarga: **-20 pts**")
         
-        # Filtros
         c1, c2 = st.columns(2)
         f_carrera = c1.selectbox("Filtrar Carrera", ["Todas"] + list(CARRERAS.keys()))
         opciones_area = ["Todas"] + CARRERAS[f_carrera] if f_carrera != "Todas" else ["Todas"]
@@ -276,7 +328,7 @@ def main_app():
                     time.sleep(1)
                     st.rerun()
 
-    # --- BILLETERA & TRANSFERENCIAS ---
+    # --- BILLETERA ---
     elif menu == "👤 Billetera & Transferencias":
         st.title("💰 Gestión Financiera F.I.T.A.")
         
@@ -284,7 +336,7 @@ def main_app():
         
         with col_wallet:
             st.subheader("💳 Mi Saldo")
-            st.info(f"Tienes **{st.session_state['puntos']} FitaCoins** disponibles para usar.")
+            st.info(f"Tienes **{st.session_state['puntos']} FitaCoins** disponibles.")
             
             st.write("### 📜 Historial")
             df = pd.DataFrame(st.session_state['transacciones']).iloc[::-1]
@@ -292,15 +344,14 @@ def main_app():
 
         with col_transfer:
             st.subheader("💸 Transferir a Amigos")
-            st.markdown("""
+            st.markdown(f"""
             <div style="background:white; padding:20px; border-radius:10px; border:1px solid #ddd;">
                 <h4 style="margin:0;">Enviar Puntos</h4>
-                <p>Ayuda a un colega a descargar planos.</p>
+                <p>Ayuda a un colega.</p>
             </div>
             """, unsafe_allow_html=True)
             st.write("")
             
-            # FORMULARIO DE TRANSFERENCIA
             destinatario = st.selectbox("Seleccionar Destinatario", st.session_state['amigos'])
             monto_envio = st.number_input("Monto a enviar", min_value=1, max_value=st.session_state['puntos'], step=10)
             
@@ -315,31 +366,29 @@ def main_app():
                 else:
                     st.error("No tienes saldo suficiente.")
 
-    # --- PANEL ADMIN (NUEVO) ---
+    # --- PANEL ADMIN ---
     elif menu == "🔧 Admin Panel":
         st.title("🔧 Panel de Control (Admin)")
-        st.warning("Zona restringida para administradores del sistema.")
+        st.warning("Zona restringida.")
         
         c1, c2 = st.columns(2)
         with c1:
             st.markdown("### 🖨️ Emisión Monetaria")
-            st.write("Generar puntos para el sistema (Testing).")
             monto_mint = st.number_input("Cantidad a generar", 100, 10000, 1000)
             if st.button("Generar Puntos"):
                 st.session_state['puntos'] += monto_mint
-                registrar_transaccion("ADMIN", monto_mint, "Generación manual de puntos")
+                registrar_transaccion("ADMIN", monto_mint, "Generación manual")
                 st.success(f"Se generaron {monto_mint} puntos.")
                 time.sleep(1)
                 st.rerun()
         
         with c2:
             st.markdown("### 👥 Gestión de Usuarios")
-            st.write("Agregar nuevo amigo a la lista de contactos.")
             nuevo_amigo = st.text_input("Nombre del nuevo usuario")
             if st.button("Agregar Usuario"):
                 if nuevo_amigo:
                     st.session_state['amigos'].append(nuevo_amigo)
-                    st.success(f"{nuevo_amigo} añadido a la red.")
+                    st.success(f"{nuevo_amigo} añadido.")
 
 # =======================================================
 # EJECUCIÓN
